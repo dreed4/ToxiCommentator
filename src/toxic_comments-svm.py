@@ -1,5 +1,8 @@
 import csv
 import re
+import numpy as np
+import gensim
+
 
 def sanitize_input(lines):
     """
@@ -13,6 +16,8 @@ def sanitize_input(lines):
         #for now, we're just removing newline characters because they are the 
         #most obvious issue
         sani_comment = re.sub("\\n","",comment)
+        
+        #trying to get rid of backslash before apostrophes. not working?
         sani_comment = re.sub('\\\\','',sani_comment)
         row[1] = sani_comment
     
