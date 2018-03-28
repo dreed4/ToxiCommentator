@@ -7,14 +7,28 @@ from keras.layers import Bidirectional, GlobalMaxPool1D
 from keras.models import Model, Sequential
 from keras import initializers, regularizers, constraints, optimizers, layers
 from setuptools.dist import sequence
+from keras.layers.convolutional import Conv1D
 
 #split train and test sets
 #will just create two files
 
 def build_model(num_words, max_vec_size, inp_len):
+    '''
+        This should build the model, but right now it isn't really ready to be 
+        trained because I don't think the layers are correct
+    '''
+    
     model = Sequential()
     model.add(Embedding(num_words, max_vec_size, input_length=inp_len))
-
+    #TODO: add convolutional layers
+    model.add(Conv1D(128,5, activation='relu'))
+    model.add(MaxPooling1D(5))
+    model.Flatten()
+    model.add(Dense(128, activation='relu'))
+    model.add(Dense(64, activation='relu'))
+    model.add(Dense(6, activation='sigmoid'))
+    
+    
 def get_data(file_path):
     print("getting data..")
     
