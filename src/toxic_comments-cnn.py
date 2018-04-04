@@ -3,16 +3,33 @@ import matplotlib.pyplot as plt
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 from keras.layers import Dense, Input, LSTM, Embedding, Dropout, Activation
-from keras.layers import Bidirectional, GlobalMaxPool1D, Flatten
+from keras.layers import Bidirectional, GlobalMaxPool1D, Flatten, MaxPooling1D
 from keras.models import Model, Sequential
 from keras import initializers, regularizers, constraints, optimizers, layers
 from setuptools.dist import sequence
 from keras.layers.convolutional import Conv1D
+from sklearn.metrics import confusion_matrix
 
 #split train and test sets
 #will just create two files
 
-def build_model(num_words, max_vec_size, inp_len):
+def build_model2(num_words, max_vec_size, inp_len):
+    model = Sequential()
+    model.add(Embedding(num_words, max_vec_size, input_length=inp_len)) 
+    model.add(Conv1D(128, 5, activation='relu'))
+    model.add(MaxPooling1D(5))
+    model.add(Conv1D(128, 5, activation='relu'))
+    model.add(MaxPooling1D(5))
+    model.add(Flatten())
+    model.add(Dense(128, activation='relu'))
+    model.add(Dense(64, activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))
+    
+    model.compile(loss='binary_crossentropy', optimizer='adam', 
+    metrics=['accuracy'])
+    
+    return model
+def build_model1(num_words, max_vec_size, inp_len):
     '''
         This should build the model, but right now it isn't really ready to be 
         trained because I don't think the layers are correct
@@ -21,14 +38,13 @@ def build_model(num_words, max_vec_size, inp_len):
     
     model = Sequential()
     model.add(Embedding(num_words, max_vec_size, input_length=inp_len))
-    #TODO: add convolutional layers
-    model.add(Conv1D(64,3, activation='sigmoid'))
-    model.add(Conv1D(32,3, activation='sigmoid'))
-    model.add(Conv1D(16,3, activation='sigmoid'))
-    #I had this pooling layer but maybe not needed?
-    #model.add(MaxPooling1D(5))
+    #previous model
+    model.add(Conv1D(64,3, activation='relu'))
+    model.add(Conv1D(32,3, activation='relu'))
+    model.add(Conv1D(16,3, activation='relu'))
     model.add(Flatten())
-    #dropout to prevent overfitting
+    #dropout to prevent overfitting; originally 0.2
+    #how should we set this
     model.add(Dropout(0.2))
     
     model.add(Dense(180, activation='sigmoid'))
@@ -89,8 +105,6 @@ def main():
     classes_lst = ["toxic","severe_toxic","obscene","threat","insult",
     "identity_hate"]
     
-    
-    
     #for now I'll leave all the dependent values in their own arrays
     y_train_toxic = train["toxic"].values
     y_train_severe = train["severe_toxic"].values
@@ -101,8 +115,6 @@ def main():
     
     #same for test set
     y_test_toxic = test["toxic"].values
-    
-    
     
     comments_train_lst = train["comment_text"]
     comments_test_lst = test["comment_text"]
@@ -122,19 +134,10 @@ def main():
     sequences_test = tokenizer_test_tup[1]
     test_padded = pad_data(sequences_test, 1500)
     
-    
-     
-    
     print("###### Padded data ######")
     print("train_padded: ", train_padded)
     print("\ntest_padded: ",  test_padded)
     print("\n########################")
-    
-
-    
-    
-    
-    
     
     #setting x vals for test and train
     x_train = train_padded
@@ -159,13 +162,22 @@ def main():
     print("len(): ", inp_len)
     ################################################################
     
-    model = build_model(num_words, max_vec_size, 1500)
+    model = build_model1(num_words, max_vec_size, 1500)
     
     print("Fitting model..")
-    history = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=2, 
+    history = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=3, 
     batch_size=100, verbose=1)
     
-    print(history.history.keys())
+    print("\n",history.history.keys())
+    
+    
+    #confusion matrix building
+    y_pred = model.predict(x_test)
+    y_pred = (y_pred > 0.5)
+    
+    cm = confusion_matrix(y_test, y_pred)
+    print("Confusion Matrix:\n")
+    print(cm)
     
     #found the following code on machinelearningmastery
     # summarize history for accuracy
