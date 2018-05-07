@@ -38,17 +38,30 @@ def build_model1(num_words, max_vec_size, inp_len):
     
     model = Sequential()
     model.add(Embedding(num_words, max_vec_size, input_length=inp_len))
-    #previous model
-    model.add(Conv1D(64,3, activation='relu'))
-    model.add(Conv1D(32,3, activation='relu'))
-    model.add(Conv1D(16,3, activation='relu'))
+    #previous model1 (should revert to this after testing) acc=~85%
+    #model.add(Conv1D(64,3, activation='relu'))
+    #model.add(Conv1D(32,3, activation='relu'))
+    #model.add(Conv1D(16,3, activation='relu'))
+    
+    model.add(Conv1D(128,3, activation='relu'))
+    model.add(MaxPooling1D(4))
+    model.add(Conv1D(128,3, activation='relu'))
+    model.add(MaxPooling1D(4))
+    model.add(Conv1D(128,3, activation='relu'))
+    model.add(MaxPooling1D(4))
+    model.add(Conv1D(128,3,activation='relu'))
+    model.add(MaxPooling1D(4))
     model.add(Flatten())
     #dropout to prevent overfitting; originally 0.2
     #how should we set this
-    model.add(Dropout(0.2))
+    model.add(Dropout(0.3))
     
-    model.add(Dense(180, activation='sigmoid'))
-    model.add(Dropout(0.2))
+    #this layer was sigmoid, but changed to relu
+    model.add(Dense(128, activation='relu'))
+    model.add(Dropout(0.3))
+    
+    model.add(Dense(64, activation='relu'))
+    model.add(Dropout(0.3))
     
     model.add(Dense(1, activation='sigmoid'))
     model.compile(loss='binary_crossentropy', optimizer='adam', 
@@ -90,6 +103,7 @@ def main():
     num_words = 20000
     maxlen = 300
     max_vec_size = 128
+    num_eps=2
     
     file_path='./data.csv'
     data_sets_tup = get_data(file_path)
@@ -165,7 +179,7 @@ def main():
     model = build_model1(num_words, max_vec_size, 1500)
     
     print("Fitting model..")
-    history = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=3, 
+    history = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=num_eps, 
     batch_size=100, verbose=1)
     
     print("\n",history.history.keys())
