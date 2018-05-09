@@ -127,6 +127,18 @@ def main():
     y_train_insult = np.array(train["insult"].values)
     y_train_identity = np.array(train["identity_hate"].values)
     
+    #create empty list to start weighting samples
+    train_weights = []
+    
+    for val in y_train_toxic:
+        if val > 0:
+            train_weights.append(10)
+        else:
+            train_weights.append(1)
+    
+    train_weights = np.array(train_weights)
+    print("len of train_weights: ", len(train_weights))
+    
     
     print("shapes: ", y_train_toxic.shape, y_train_severe.shape, y_train_obscene.shape, y_train_threat.shape, y_train_insult.shape, y_train_identity.shape)
     #stack into giant 2d array
@@ -140,8 +152,8 @@ def main():
     y_test_insult = np.array(test["insult"].values)
     y_test_identity = np.array(test["identity_hate"].values)
     
-    #empty list
-    weights = []
+    
+    
     
     
     print("shapes: ", y_test_toxic.shape, y_test_severe.shape, y_test_obscene.shape, y_test_threat.shape, y_test_insult.shape, y_test_identity.shape)
@@ -204,7 +216,7 @@ def main():
     
     print("Fitting model..")
     history = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=num_eps, 
-    batch_size=100, verbose=1)
+    batch_size=100, verbose=1, sample_weight=train_weights)
     
     
     labels = ['toxic', 'severe', 'obscene', 'threat', 'insult', 'identity']
